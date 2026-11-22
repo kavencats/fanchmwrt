@@ -11,9 +11,9 @@ on:
 env:
   REPO_OWNER: ${{ github.repository_owner }}
   SOURCE_REPO: fanchmwrt/fanchmwrt      # ⚠️ 改成你的 fanchmwrt 源地址
-  SOURCE_BRANCH: fanchmwrt-25.12.6               # ⚠️ 改成 fanchmwrt 的分支
+  SOURCE_BRANCH: fanchmwrt-25.12.6              # ⚠️ 改成 fanchmwrt 的分支
   TARGET: mediatek/filogic
-  PROFILE: cudy_tr3000-256mb-v1       # ⚠️ 确保与 .config 一致
+  PROFILE: cudy_tr3000-256mb-v1
   CONFIG_FILE: configs/tr3000-256m-usb-agd.config
   DIY_SCRIPT: diy-part2.sh
 
@@ -28,13 +28,14 @@ jobs:
         with:
           path: builder
 
-      - name: 安装依赖
+      - name: 安装依赖（官方推荐完整包）
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential clang flex bison g++ gawk \
-            gettext git libncurses-dev libssl-dev \
-            python3 python3-setuptools rsync unzip \
+            gcc-multilib g++-multilib gettext git \
+            libncurses-dev libssl-dev python3-distutils \
+            python3-setuptools rsync swig unzip \
             zlib1g-dev file wget curl cpio rsync \
             qemu-utils xz-utils
 
@@ -56,34 +57,29 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 应用自定义配置（使用 olddefconfig 保护已有选项）
+      - name: 应用自定义配置
         run: |
-          cd openwrt
-          # 强制写入目标平台层级（确保不会被 defconfig 清掉）
-          echo 'CONFIG_TARGET_mediatek=y' > .config
-          echo 'CONFIG_TARGET_mediatek_filogic=y' >> .config
-          echo 'CONFIG_TARGET_mediatek_filogic_DEVICE_cudy_tr3000-256mb-v1=y' >> .config
-          # 追加你的自定义配置
-          cat ${{ github.workspace }}/builder/${{ env.CONFIG_FILE }} >> .config
-          # 去重
-          sort -u -o .config .config
-          # 执行 olddefconfig 而非 defconfig
-          make olddefconfig
-          # 如果 diy-part2.sh 存在，运行它
-          if [ -f ${{ github.workspace }}/builder/${{ env.DIY_SCRIPT }} ]; then
-            cp ${{ github.workspace }}/builder/${{ env.DIY_SCRIPT }} diy-part2.sh
-            chmod +x diy-part2.sh
-            ./diy-part2.sh
+          cp builder/${{ env.CONFIG_FILE }} openwrt/.config
+          if [ -f builder/${{ env.DIY_SCRIPT }} ]; then
+            cp builder/${{ env.DIY_SCRIPT }} openwrt/diy-part2.sh
+            chmod +x openwrt/diy-part2.sh
+            (cd openwrt && ./diy-part2.sh)
           fi
+          cd openwrt
+          make defconfig
 
-      - name: 校验目标设备
+      - name: 校验目标设备（三段式符号）
         working-directory: openwrt
         run: |
-          grep -q 'CONFIG_TARGET_filogic=y' .config || {
-            echo "::error::filogic 子目标未启用"; exit 1; }
-          grep -q 'CUDY_TR3000' .config || {
-            echo "::error::Cudy TR3000 profile 未命中"; exit 1; }
-          make info | head -40
+          grep -q '^CONFIG_TARGET_mediatek=y' .config || {
+            echo "::error::mediatek target 未启用"; exit 1; }
+          grep -q '^CONFIG_TARGET_mediatek_filogic=y' .config || {
+            echo "::error::filogic subtarget 未启用"; exit 1; }
+          grep -q '^CONFIG_TARGET_mediatek_filogic_DEVICE_cudy_tr3000-256mb-v1=y' .config || {
+            echo "::error::cudy_tr3000-256mb-v1 profile 未命中，请确认源码已合入 256MB 支持"; exit 1; }
+          echo "---- make info 输出 ----"
+          make info | grep -iE 'cudy|tr3000' || {
+            echo "::error::make info 未找到 TR3000 设备"; exit 1; }
 
       - name: 预下载（多线程）
         working-directory: openwrt
