@@ -1,8 +1,8 @@
 #!/bin/bash
-set -e
+#set -e
 
-DTS_DIR="target/linux/mediatek/dts"
-MK="target/linux/mediatek/image/filogic.mk"
+#DTS_DIR="target/linux/mediatek/dts"
+#MK="target/linux/mediatek/image/filogic.mk"
 
 PKG_DIR="package/custom"
 mkdir -p "$PKG_DIR"
@@ -23,18 +23,18 @@ fi
 #  # 在 filogic.mk 里追加 profile（按你源码实际变量名微调）
 #  cat >> "$MK" <<'EOF'
 
-define Device/cudy_tr3000-256mb-v1
-  $(Device/mediatek/filogic-common)
-  DEVICE_MODEL := Cudy TR3000
-  DEVICE_VARIANT := 256MB v1
-  DEVICE_DTS := mt7981b-cudy-tr3000-v1-256mb
-  IMAGE_SIZE := 252000k
-endef
-TARGET_DEVICES += cudy_tr3000-256mb-v1
-EOF
-fi
+#define Device/cudy_tr3000-256mb-v1
+#  $(Device/mediatek/filogic-common)
+#  DEVICE_MODEL := Cudy TR3000
+#  DEVICE_VARIANT := 256MB v1
+#  DEVICE_DTS := mt7981b-cudy-tr3000-v1-256mb
+#  IMAGE_SIZE := 252000k
+#endef
+#TARGET_DEVICES += cudy_tr3000-256mb-v1
+#EOF
+#fi
 
 # 顺手固定 LAN IP，方便刷完直接进
-sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
+sed -i 's/192.168.1.1/192.168.3.1/g' package/base-files/files/bin/config_generate
 
 echo ">> diy-part2 done"
