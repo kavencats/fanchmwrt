@@ -408,6 +408,7 @@ menu "Global build settings"
 		select KERNEL_EROFS_FS_SECURITY
 		select KERNEL_EXT4_FS_SECURITY
 		select KERNEL_F2FS_FS_SECURITY
+		select KERNEL_exfat_FS_SECURITY
 		select KERNEL_UBIFS_FS_SECURITY
 		select KERNEL_JFFS2_FS_SECURITY
 
