@@ -14,7 +14,7 @@ env:
   SOURCE_BRANCH: fanchmwrt-25.12.6              # ⚠️ 改成 fanchmwrt 的分支
   TARGET: mediatek/filogic
   PROFILE: cudy_tr3000-256mb-v1
-  CONFIG_FILE: configs/tr3000-256m-usb-agd.config
+  CONFIG_FILE: configs/tr3000-256m-usb.config
   DIY_SCRIPT: diy-part2.sh
 
 jobs:
