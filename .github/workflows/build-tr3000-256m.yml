@@ -7,13 +7,14 @@ on:
         description: '开启 SSH 调试（menuconfig 手动改配置）'
         type: boolean
         default: false
+
 env:
   REPO_OWNER: ${{ github.repository_owner }}
-  SOURCE_REPO: fanchmwrt/fanchmwrt      # ⚠️ 改成你的 fanchmwrt 源地址
-  SOURCE_BRANCH: fanchmwrt-25.12.6               # ⚠️ 改成 fanchmwrt 的分支
+  SOURCE_REPO: coolsnowwolf/lede      # ⚠️ 改成你的 fanchmwrt 源地址
+  SOURCE_BRANCH: master               # ⚠️ 改成 fanchmwrt 的分支
   TARGET: mediatek/filogic
-  PROFILE: cudy_tr3000-v1             # ⚠️ 以 make info 输出为准
-  CONFIG_FILE: configs/tr3000-256m-usb.config
+  PROFILE: cudy_tr3000-256mb-v1       # ⚠️ 确保与 .config 一致
+  CONFIG_FILE: configs/tr3000-256m-usb-agd.config
   DIY_SCRIPT: diy-part2.sh
 
 jobs:
@@ -55,16 +56,25 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 应用自定义配置
+      - name: 应用自定义配置（使用 olddefconfig 保护已有选项）
         run: |
-          cp builder/${{ env.CONFIG_FILE }} openwrt/.config
-          if [ -f builder/${{ env.DIY_SCRIPT }} ]; then
-            cp builder/${{ env.DIY_SCRIPT }} openwrt/diy-part2.sh
-            chmod +x openwrt/diy-part2.sh
-            (cd openwrt && ./diy-part2.sh)
-          fi
           cd openwrt
-          make defconfig
+          # 强制写入目标平台层级（确保不会被 defconfig 清掉）
+          echo 'CONFIG_TARGET_mediatek=y' > .config
+          echo 'CONFIG_TARGET_mediatek_filogic=y' >> .config
+          echo 'CONFIG_TARGET_mediatek_filogic_DEVICE_cudy_tr3000-256mb-v1=y' >> .config
+          # 追加你的自定义配置
+          cat ${{ github.workspace }}/builder/${{ env.CONFIG_FILE }} >> .config
+          # 去重
+          sort -u -o .config .config
+          # 执行 olddefconfig 而非 defconfig
+          make olddefconfig
+          # 如果 diy-part2.sh 存在，运行它
+          if [ -f ${{ github.workspace }}/builder/${{ env.DIY_SCRIPT }} ]; then
+            cp ${{ github.workspace }}/builder/${{ env.DIY_SCRIPT }} diy-part2.sh
+            chmod +x diy-part2.sh
+            ./diy-part2.sh
+          fi
 
       - name: 校验目标设备
         working-directory: openwrt
@@ -72,7 +82,7 @@ jobs:
           grep -q 'CONFIG_TARGET_filogic=y' .config || {
             echo "::error::filogic 子目标未启用"; exit 1; }
           grep -q 'CUDY_TR3000' .config || {
-            echo "::error::Cudy TR3000 profile 未命中，请检查 .config"; exit 1; }
+            echo "::error::Cudy TR3000 profile 未命中"; exit 1; }
           make info | head -40
 
       - name: 预下载（多线程）
@@ -117,7 +127,8 @@ jobs:
           name: TR3000-256M fanchmwrt #${{ github.run_number }}
           body: |
             自动生成，勿手刷 128MB 设备。
-            含 USB 存储：ext4 / exFAT / NTFS3 / block-mount / hd-idle
+            USB 存储：ext4 / exFAT / NTFS3 / block-mount / hd-idle（无 diskman UI）
+            广告过滤：AdGuard Home
           files: artifacts/*.bin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
