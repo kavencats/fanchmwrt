@@ -16,12 +16,12 @@ if ! ./scripts/feeds list -n 2>/dev/null | grep -qx 'adguardhome'; then
 fi
 
 # 若已存在 256mb dts 就跳过
-if [ ! -f "$DTS_DIR/mt7981b-cudy-tr3000-v1-256mb.dts" ]; then
-  echo ">> 注入 256MB DTS"
-  cp "$GITHUB_WORKSPACE/builder/files/mt7981b-cudy-tr3000-v1-256mb.dts" \
-     "$DTS_DIR/"
-  # 在 filogic.mk 里追加 profile（按你源码实际变量名微调）
-  cat >> "$MK" <<'EOF'
+#if [ ! -f "$DTS_DIR/mt7981b-cudy-tr3000-v1-256mb.dts" ]; then
+#  echo ">> 注入 256MB DTS"
+#  cp "$GITHUB_WORKSPACE/builder/files/mt7981b-cudy-tr3000-v1-256mb.dts" \
+#     "$DTS_DIR/"
+#  # 在 filogic.mk 里追加 profile（按你源码实际变量名微调）
+#  cat >> "$MK" <<'EOF'
 
 define Device/cudy_tr3000-256mb-v1
   $(Device/mediatek/filogic-common)
