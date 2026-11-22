@@ -10,8 +10,8 @@ on:
 
 env:
   REPO_OWNER: ${{ github.repository_owner }}
-  SOURCE_REPO: coolsnowwolf/lede      # ⚠️ 改成你的 fanchmwrt 源地址
-  SOURCE_BRANCH: master               # ⚠️ 改成 fanchmwrt 的分支
+  SOURCE_REPO: fanchmwrt/fanchmwrt      # ⚠️ 改成你的 fanchmwrt 源地址
+  SOURCE_BRANCH: fanchmwrt-25.12.6               # ⚠️ 改成 fanchmwrt 的分支
   TARGET: mediatek/filogic
   PROFILE: cudy_tr3000-256mb-v1       # ⚠️ 确保与 .config 一致
   CONFIG_FILE: configs/tr3000-256m-usb-agd.config
