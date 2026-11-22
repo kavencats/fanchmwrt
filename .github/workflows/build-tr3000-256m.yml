@@ -7,11 +7,6 @@ on:
         description: '开启 SSH 调试（menuconfig 手动改配置）'
         type: boolean
         default: false
-  push:
-    paths:
-      - 'configs/tr3000-256m-usb.config'
-      - '.github/workflows/build-tr3000-256m.yml'
-
 env:
   REPO_OWNER: ${{ github.repository_owner }}
   SOURCE_REPO: coolsnowwolf/lede      # ⚠️ 改成你的 fanchmwrt 源地址
